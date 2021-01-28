@@ -1,16 +1,17 @@
 package com.ikea.warehouse.responses;
 
-import java.util.HashSet;
-import java.util.Set;
-import com.ikea.warehouse.models.Article;
-import com.ikea.warehouse.models.ArticleProductKey;
-import com.ikea.warehouse.models.Inventory;
-import com.ikea.warehouse.models.Product;
+import lombok.Getter;
+import lombok.Setter;
 
-import lombok.Data;
-
-@Data
+@Getter
+@Setter
 public class ProductResponse {
+
     String name;
-    Integer stock;
+    Integer availableUnits;
+
+    public ProductResponse (String name, Integer availableUnits) {     
+        this.name = name;
+        this.availableUnits = availableUnits;
+    }    
 }

@@ -13,8 +13,8 @@ public interface ProductRepository extends CrudRepository<Product, Integer> {
     " FROM Product p " +
     " LEFT OUTER JOIN Inventory i ON p.name = i.product_name " +
     " LEFT OUTER JOIN Article a ON i.article_id = a.id")
-    List<Product> findAllWithStock();   
+    List<Product> findAllWithStock();
 
-    @Query(nativeQuery = true, value = "SELECT p.* FROM Product p")
-    List<Product> findAll();   
+	Product findByName(String name);   
+  
 }

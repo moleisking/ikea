@@ -6,7 +6,6 @@ import com.ikea.warehouse.models.Article;
 import com.ikea.warehouse.models.ArticleProductKey;
 import com.ikea.warehouse.models.Inventory;
 import com.ikea.warehouse.models.Product;
-
 import lombok.Data;
 
 @Data
@@ -14,14 +13,14 @@ public class ProductRequest {
     String name;
     Set<ArticleRequest> contain_articles;     
 
-    Product toProduct() {      
+    public Product toProduct() {      
        
         Product product = new Product();
         product.setName(this.name);    
         return product;
     }
 
-    Set<Inventory> toInventory() {
+    public Set<Inventory> toInventory() {
       
         Set<Inventory> inventories = new HashSet<Inventory>();
         Product product = new Product();

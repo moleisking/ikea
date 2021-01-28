@@ -14,65 +14,73 @@ import com.ikea.warehouse.repositories.InventoryRepository;
 import com.ikea.warehouse.services.WarehouseService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest
 public class WarehouseControllerUnitTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockBean
-    private ArticleRepository articleRepository;
-    
-    @MockBean
-    private ProductRepository carRepository;
+        @MockBean
+        private ArticleRepository articleRepository;
 
-    @Mock
-    private WarehouseController journeyController;    
+        @MockBean
+        private InventoryRepository inventoryRepository;
 
-    @MockBean
-    private WarehouseService warehouseService;   
+        @MockBean
+        private ProductRepository productRepository;
 
-    @Test
-    public void GivenWarehouseServiceIsUp_WhenPutInventory_ThenReplyOk() throws Exception {
-        MvcResult mvcResult = mockMvc
-                .perform(put("/inventory/add").header("Content-type", "application/json")
-                        .content("{\"inventory\"[{\"art_id\":\"1\",\"name\":\"4\",\"stock\":\"4\"}]}"))
-                .andExpect(status().isOk()).andReturn();
-        assertEquals(null, mvcResult.getResponse().getContentType());
-    }
+        @Mock
+        private WarehouseController warehouseController;
 
-    @Test
-    public void GivenWarehouseServiceIsUp_WhenDeleteProduct_ThenReplyOk() throws Exception {
-        MvcResult mvcResult = mockMvc
-                .perform(post("/product/remove").header("Content-type", "application/json").content("{\"name\":\"Desk\",\"contain_articles\":[{\"art_id\":\"4\",\"amount_of\":\"4\"}]}"))
-                .andExpect(status().isOk()).andReturn();
-        assertEquals(null, mvcResult.getResponse().getContentType());
-    }
+        @MockBean
+        private WarehouseService warehouseService;
 
-    @Test
-    public void GivenWarehouseServiceIsUp_WhenGetProducts_ThenReplyOk() throws Exception {
-        MvcResult mvcResult = mockMvc
-                .perform(get("/products/all").header("Content-type", "application/json"))
-                .andExpect(status().isOk()).andReturn();
-        assertEquals(null, mvcResult.getResponse().getContentType());
-    }
+        @Test
+        public void GivenWarehouseServiceIsUp_WhenPutInventory_ThenReplyOk() throws Exception {
 
-    @Test
-    public void GivenWarehouseServiceIsUp_WhenPutProducts_ThenReplyOk() throws Exception {
-        MvcResult mvcResult = mockMvc
-                .perform(put("/products/add").header("Content-type", "application/json")
-                        .content("{\"products\"[{\"name\":\"Desk\",\"contain_articles\":[{\"art_id\":\"4\",\"amount_of\":\"4\"}]}]}"))
-                .andExpect(status().isOk()).andReturn();
-        assertEquals(null, mvcResult.getResponse().getContentType());
-    }     
+                MvcResult mvcResult = mockMvc.perform(put("/inventory/add").header("Content-type", "application/json")
+                                .content("{\"inventory\":[{\"art_id\":\"1\",\"name\":\"leg\",\"stock\":\"4\"}]}"))
+                                .andExpect(status().isOk()).andReturn();
 
-    @Test
-    public void GivenWarehouseServiceIsUp_WhenGetStatus_ThenReplyOk() throws Exception {
-        mockMvc.perform(get("/status")).andExpect(status().isOk()).andReturn();
-    }
+                assertEquals(null, mvcResult.getResponse().getContentType());
+        }
+
+        @Test
+        public void GivenWarehouseServiceIsUp_WhenDeleteProduct_ThenReplyOk() throws Exception {
+
+                when(warehouseService.removeProduct(any())).thenReturn(true);
+
+                MvcResult mvcResult = mockMvc.perform(delete("/product/remove")
+                                .header("Content-type", "application/json").content("{\"name\":\"Desk\"}"))
+                                .andExpect(status().isOk()).andReturn();
+
+                assertEquals(null, mvcResult.getResponse().getContentType());
+        }
+
+        @Test
+        public void GivenWarehouseServiceIsUp_WhenGetProducts_ThenReplyOk() throws Exception {
+
+                MvcResult mvcResult = mockMvc.perform(get("/products/all").header("Content-type", "application/json"))
+                                .andExpect(status().isOk()).andReturn();
+
+                assertEquals("application/json", mvcResult.getResponse().getContentType());
+        }
+
+        @Test
+        public void GivenWarehouseServiceIsUp_WhenPutProducts_ThenReplyOk() throws Exception {
+
+                MvcResult mvcResult = mockMvc.perform(put("/products/add").header("Content-type", "application/json")
+                                .content("{\"products\":[{\"name\":\"Desk\",\"contain_articles\":[{\"art_id\":\"1\",\"amount_of\":\"4\"}]}]}"))
+                                .andExpect(status().isOk()).andReturn();
+
+                assertEquals(null, mvcResult.getResponse().getContentType());
+        }
+
 }

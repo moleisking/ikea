@@ -1,7 +1,6 @@
 package com.ikea.warehouse.requests;
 
 import com.ikea.warehouse.models.Article;
-
 import lombok.Data;
 
 @Data

@@ -1,12 +1,13 @@
 package com.ikea.warehouse.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
+import com.ikea.warehouse.models.Article;
 import com.ikea.warehouse.models.Inventory;
 import com.ikea.warehouse.models.Product;
 import com.ikea.warehouse.repositories.ProductRepository;
 import com.ikea.warehouse.requests.InventoryRequest;
 import com.ikea.warehouse.requests.ProductsRequest;
+import com.ikea.warehouse.responses.ProductResponse;
 import com.ikea.warehouse.repositories.ArticleRepository;
 import com.ikea.warehouse.repositories.InventoryRepository;
 import java.io.File;
@@ -14,10 +15,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import javax.validation.Valid;
+import java.util.Optional;
+import org.apache.commons.collections4.IteratorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Service
 public class WarehouseService {
@@ -44,30 +44,44 @@ public class WarehouseService {
 
     private Logger log = LoggerFactory.getLogger(WarehouseService.class.getName());
 
-    public List<Product> listProductsAvailability() {
-        List<Product> products = productRepository.findAll(); // ImmutableList.copyOf(productRepository.findAll()); //productRepository.findAll();  //
-        for (int i = 0; i < products.size() ; i++ ) {
-            ArrayList<Integer> quotients = new ArrayList<>();
-            for (Inventory inventory : products.get(i).getInventory()) {
-                int quotient = inventory.getArticle().getStock() / inventory.getAmount_of();
-                quotients.add(quotient);
-            }
-            products.get(i).setStock(quotients.indexOf(Collections.min(quotients)));           
-        }
-        return products;
+    public void addInventory(InventoryRequest inventoryRequest) {
+
+        articleRepository.saveAll(inventoryRequest.toArticles());
+        log.info("Article inventory added {}", inventoryRequest.getInventory().size());
     }
 
-    private void loadProducts() {
+    public void addProducts(ProductsRequest productsRequest) {
 
-        try {
-            File file = ResourceUtils.getFile("classpath:static/products.json");
-            InputStream in = new FileInputStream(file);
-            ObjectMapper mapper = new ObjectMapper();
-            ProductsRequest productsRequest = mapper.readValue(in, ProductsRequest.class);
-            addProducts(productsRequest);
-        } catch (IOException e) {
-            log.error(e.getMessage());
+        List<Product> products = productsRequest.toProducts();
+        products = (List<Product>) productRepository.saveAll(products);
+        log.info("Products added {}", productsRequest.getProducts().size());
+
+        List<Inventory> inventories = productsRequest.toInventories();
+        inventories = (List<Inventory>) inventoryRepository.saveAll(inventories);
+        log.info("Product inventory added {}", inventories.size());
+    }
+
+    public Integer availableUnitsOfProduct(Product product) {
+        ArrayList<Integer> quotients = new ArrayList<>();
+        for (Inventory inventory : product.getInventory()) {
+            int quotient = inventory.getArticle().getStock() / inventory.getAmount_of();
+            quotients.add(quotient);
         }
+        return Collections.min(quotients);
+    }
+
+    public List<ProductResponse> listProductsAvailability() {
+        List<ProductResponse> productResponses = new ArrayList<>();
+        try {
+            List<Product> products = IteratorUtils.toList(productRepository.findAll().iterator());
+            for (Product product : products) {
+                productResponses.add(new ProductResponse(product.getName(), availableUnitsOfProduct(product)));
+            }
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
+        }
+
+        return productResponses;
     }
 
     private void loadInventory() {
@@ -83,26 +97,43 @@ public class WarehouseService {
         }
     }
 
-    public void addProducts(@Valid @RequestBody ProductsRequest productsRequest) {
+    private void loadProducts() {
 
-        List<Product> products = productsRequest.toProducts();
-        products = (List<Product>) productRepository.saveAll(products);
-        log.info("Products added {}", productsRequest.getProducts().size());
-
-        List<Inventory> inventories = productsRequest.toInventories();
-        inventories = (List<Inventory>) inventoryRepository.saveAll(inventories);
-        log.info("Product inventory added {}", inventories.size());
+        try {
+            File file = ResourceUtils.getFile("classpath:static/products.json");
+            InputStream in = new FileInputStream(file);
+            ObjectMapper mapper = new ObjectMapper();
+            ProductsRequest productsRequest = mapper.readValue(in, ProductsRequest.class);
+            addProducts(productsRequest);
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
     }
 
-    public void addInventory(@Valid @RequestBody InventoryRequest inventoryRequest) {
+    public Boolean removeProduct(Product product) {
+        product = productRepository.findByName(product.getName());
+        if (product != null && availableUnitsOfProduct(product) > 0) {
 
-        articleRepository.saveAll(inventoryRequest.toArticles());
-        log.info("Article inventory added {}", inventoryRequest.getInventory().size());
+            for (Inventory inventory : product.getInventory()) {
+                Optional<Article> articleOptional = articleRepository.findById(inventory.getArticle().getId());
+                if (articleOptional.isPresent()) {
+                    Article article = articleOptional.get();
+                    article.setStock(article.getStock() - inventory.getAmount_of());
+                    articleRepository.save(article);
+                    log.info("Inventory remove {}", inventory);
+                }
+            }
+            return true;
+        } else {
+            log.error("Inventory stock insufficient {}", product.getName());
+            return false;
+        }
+
     }
 
-    @Scheduled(fixedRate = 24 * 60 * 60 * 1000)
+    @Scheduled(initialDelay = 2000, fixedRate = 24 * 60 * 60 * 1000)
     public void tryLoadInventoryAndProducts() {
-
+        log.error("tryLoadInventoryAndProducts started...");
         if (warehouseImport.equals(true)) {
             try {
                 loadInventory();

@@ -7,20 +7,18 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
 @Entity
+@Getter
+@Setter
 public class Product {
   
     @Id    
     String name;
     
     Double price;
-
-    Integer stock;
-
-    Integer amount_of;
 
     @OneToMany(cascade = CascadeType.DETACH, fetch = FetchType.EAGER, mappedBy = "product")
     Set<Inventory> inventory = new HashSet<>();

@@ -12,7 +12,7 @@ public class InventoryRequest {
 
    public List<Article> toArticles() {
         List<Article> articles = new ArrayList<Article>();
-        for (ArticleRequest articleRequest : inventory) {
+        for (ArticleRequest articleRequest : this.inventory) {
             articles.add(articleRequest.toArticle());
         }       
         return articles;
