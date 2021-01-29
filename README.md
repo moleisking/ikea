@@ -7,16 +7,19 @@
 
 >".\gradlew tasks" for menu of cmd
 
->"docker image build -t WarehouseApplication ."
+>"docker image build -t warehouse ."
 
->"docker container run -p 9091:9091 WarehouseApplication"
+>"docker container run -p 9091:9091 warehouse"
 
 ### Reference Links
 For further reference, please consider the following sections:
 
 * [Backend](http://localhost:9091)
+* [Get all products](http://localhost:9091/products/all)
+* [Delete product](http://localhost:9091/product/remove)
+* [Backend](http://localhost:9091)
 * [H2 database with JDBC URL "jdbc:h2:mem:app"](http://localhost:9091/console)
-* [Spring boot web status](http://localhost:9091/actuator)
+* [Web server status](http://localhost:9091/actuator/health)
 
 
 ### Issues
