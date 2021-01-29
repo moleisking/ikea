@@ -26,6 +26,6 @@ For further reference, please consider the following sections:
 - Docker image is a bit big, it could be optimized further
 - ID's could used GUID in order to work in a more distributed way.
 - ID's could be @GeneratedValue but this seems not to be required by the specifications.
-- Journey and car could have more specified fields such as name to become more humanly readable.
+- More tests as many cases are not tested but I was told to only put in a days worth of effort.
 - There are some potential hacks if put and post are done in the wrong order but this seems to be part of the architecture that was specified. 
 - Personlly I think the system could be done better but given the architectural limits of the specifications, this would have to be discussed with product, team and managers.
